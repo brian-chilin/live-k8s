@@ -1,0 +1,43 @@
+# dynmap service
+apiVersion: v1
+kind: Service
+metadata:
+  name: external-dynmap
+spec:
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8123
+
+---
+
+# dynmap resource
+apiVersion: v1
+kind: Endpoints
+metadata:
+  name: external-dynmap
+subsets:
+  - addresses:
+      - ip: 192.168.1.69
+    ports:
+      - port: 8123
+
+---
+
+# GENERAL   
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: brians43-ingress
+spec:
+  rules:
+  - host: dynmap.brian2002.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: external-dynmap
+            port:
+              number: 8080

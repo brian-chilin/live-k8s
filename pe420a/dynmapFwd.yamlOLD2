@@ -1,0 +1,32 @@
+# DYNMAP SERVICE
+apiVersion: v1
+kind: Service
+metadata:
+  name: external-dynmap
+spec:
+  ports:
+  - name: dynmap
+    port: 8123
+    protocol: TCP
+  clusterIP: None
+  type: ClusterIP
+---
+# GENERAL INGRESS
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: dynmap-service
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  rules:
+  - host: dynmap.brian2002.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: external-dynmap
+            port:
+              number: 8080

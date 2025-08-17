@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auto1
+spec:
+  selector:
+    matchLabels:
+      app: auto1
+  template:
+    metadata:
+      labels:
+        app: auto1
+    spec:
+      containers:
+      - name: auto1
+        image: gallery.local:5002/auto1-web:latest
+        ports:
+        - containerPort: 5950
+        volumeMounts:
+        - name: config-volume
+          mountPath: /app/config.ini
+          subPath: config.ini
+      volumes:
+      - name: config-volume
+        configMap:
+          name: auto1-config
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: auto1
+spec:
+  selector:
+    app: auto1
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 5950
+  type: ClusterIP
+
+---
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: auto1-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: dev.brian2002.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: auto1
+            port:
+              number: 80

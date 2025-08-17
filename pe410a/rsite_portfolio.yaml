@@ -1,36 +1,36 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: sandybox1
+  name: portfolio
 spec:
-  replicas: 4
+  replicas: 2
   selector:
     matchLabels:
-      app: sandybox1
+      app: portfolio
   template:
     metadata:
       labels:
-        app: sandybox1
+        app: portfolio
     spec:
       containers:
-      - name: sandybox1
-        image: gallery.local:5002/sandybox1:latest
+      - name: portfolio
+        image: gallery.local:5002/rsite_portfolio-web:latest
         ports:
-        - containerPort: 5100
+        - containerPort: 5001
 
 ---
 
 apiVersion: v1
 kind: Service
 metadata:
-  name: sandybox1
+  name: portfolio
 spec:
   selector:
-    app: sandybox1
+    app: portfolio
   ports:
   - protocol: TCP
     port: 80
-    targetPort: 5100
+    targetPort: 5001
   type: ClusterIP
 
 ---
@@ -38,28 +38,28 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: sandybox1-ingress
+  name: portfolio-ingress
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /
 spec:
   ingressClassName: nginx
   rules:
-  - host: sandybox1.brian2002.com
+  - host: brian2002.com
     http:
       paths:
       - path: /
         pathType: Prefix
         backend:
           service:
-            name: sandybox1
+            name: portfolio
             port:
               number: 80
-#  - http:
-#      paths:
-#      - path: /
-#        pathType: Prefix
-#        backend:
-#          service:
-#            name: sandybox1
-#            port:
-#              number: 80
+  - http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: portfolio
+            port:
+              number: 80

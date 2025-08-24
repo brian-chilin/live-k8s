@@ -1,36 +1,36 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: sandybox1
+  name: juxtapose
 spec:
-  replicas: 4
+  replicas: 2
   selector:
     matchLabels:
-      app: sandybox1
+      app: juxtapose
   template:
     metadata:
       labels:
-        app: sandybox1
+        app: juxtapose
     spec:
       containers:
-      - name: sandybox1
-        image: gallery.local:5002/sandybox1:latest
+      - name: juxtapose
+        image: gallery.local:5002/juxtapose:latest
         ports:
-        - containerPort: 5100
+        - containerPort: 80
 
 ---
 
 apiVersion: v1
 kind: Service
 metadata:
-  name: sandybox1
+  name: juxtapose
 spec:
   selector:
-    app: sandybox1
+    app: juxtapose
   ports:
   - protocol: TCP
     port: 80
-    targetPort: 5100
+    targetPort: 80
   type: ClusterIP
 
 ---
@@ -38,23 +38,20 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: sandybox1-ingress
+  name: juxtapose-ingress
   annotations: {}
-    #cert-manager.io/issuer: "letsencrypt-staging"
 spec:
   ingressClassName: nginx
-#  tls:
-#  - hosts:
-#    - sandybox1.brian2002.com
-#    secretName: sandybox1-brian2002-tls
   rules:
-  - host: sandybox1.brian2002.com
+  - host: old.brian2002.com
     http:
       paths:
       - path: /
         pathType: Prefix
         backend:
           service:
-            name: sandybox1
+            name: juxtapose
             port:
               number: 80
+
+

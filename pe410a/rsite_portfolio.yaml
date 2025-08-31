@@ -40,30 +40,22 @@ kind: Ingress
 metadata:
   name: portfolio-ingress
   annotations:
-    cert-manager.io/issuer: "letsencrypt-staging"
+    cert-manager.io/issuer: "letsencrypt-prod"
 spec:
   ingressClassName: nginx
   tls:
   - hosts:
-    - brian2002.com
-    secretName: brian2002-tls
+    - old.brian2002.com
+    secretName: old-brian2002-tls
   rules:
-  - host: brian2002.com
+  - host: old.brian2002.com
     http:
       paths:
       - path: /
-        pathType: ImplementationSpecific
+        pathType: Prefix
         backend:
           service:
             name: portfolio
             port:
               number: 80
-#  - http:
-#      paths:
-#      - path: /
-#        pathType: Prefix
-#        backend:
-#          service:
-#            name: portfolio
-#            port:
-#              number: 80
+

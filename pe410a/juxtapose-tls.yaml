@@ -17,6 +17,17 @@ spec:
         image: gallery.local:5002/juxtapose:latest
         ports:
         - containerPort: 80
+        env:
+        - name: CONFIG_DIR
+          value: /etc/juxtapose_config
+        volumeMounts:
+        - name: config-volume
+          mountPath: /etc/juxtapose_config
+          readOnly: true
+      volumes:
+      - name: config-volume
+        secret:
+          secretName: juxtapose-config
 
 ---
 
@@ -39,11 +50,16 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: juxtapose-ingress
-  annotations: {}
+  annotations:
+    cert-manager.io/issuer: "letsencrypt-prod"
 spec:
   ingressClassName: nginx
+  tls:
+  - hosts:
+    - brian2002.com
+    secretName: juxtapose-tls
   rules:
-  - host: old.brian2002.com
+  - host: brian2002.com
     http:
       paths:
       - path: /

@@ -1,0 +1,106 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: login-boilerplate-index
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: login-boilerplate-index
+  template:
+    metadata:
+      labels:
+        app: login-boilerplate-index
+    spec:
+      containers:
+      - name: login-boilerplate-index
+        image: gallery.local:5002/login_boilerplate_index:latest
+        ports:
+        - containerPort: 80
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: login-boilerplate-flask
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: login-boilerplate-flask
+  template:
+    metadata:
+      labels:
+        app: login-boilerplate-flask
+    spec:
+      containers:
+      - name: login-boilerplate-flask
+        image: gallery.local:5002/login_boilerplate_flask:latest
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: db-conf
+          mountPath: /etc/config # as described in source code
+          readOnly: true
+      volumes:
+      - name: db-conf
+        secret:
+          secretName: login-boilerplate-database-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: login-boilerplate-flask
+spec:
+  selector:
+    app: login-boilerplate-flask
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: login-boilerplate-index
+spec:
+  selector:
+    app: login-boilerplate-index
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
+  type: ClusterIP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: login-boilerplate-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    cert-manager.io/issuer: "letsencrypt-prod"
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - login-boilerplate.brian2002.com
+    secretName: login-boilerplate-brian2002-tls
+  rules:
+  - host: login-boilerplate.brian2002.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: login-boilerplate-index
+            port:
+              number: 80
+      - path: /flask
+        pathType: Prefix
+        backend:
+          service:
+            name: login-boilerplate-flask
+            port:
+              number: 80
+

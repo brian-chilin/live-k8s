@@ -1,19 +1,20 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: login-boilerplate-index
+  name: index
+  namespace: login-boilerplate
 spec:
   replicas: 2
   selector:
     matchLabels:
-      app: login-boilerplate-index
+      app: index
   template:
     metadata:
       labels:
-        app: login-boilerplate-index
+        app: index
     spec:
       containers:
-      - name: login-boilerplate-index
+      - name: index
         image: gallery.local:5002/login_boilerplate_index:latest
         ports:
         - containerPort: 80
@@ -21,38 +22,48 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: login-boilerplate-flask
+  name: flask
+  namespace: login-boilerplate
 spec:
   replicas: 2
   selector:
     matchLabels:
-      app: login-boilerplate-flask
+      app: flask
   template:
     metadata:
       labels:
-        app: login-boilerplate-flask
+        app: flask
     spec:
       containers:
-      - name: login-boilerplate-flask
+      - name: flask
+        #command: ["sleep"]
+        #args: ["6000"]
         image: gallery.local:5002/login_boilerplate_flask:latest
         ports:
         - containerPort: 80
         volumeMounts:
         - name: db-conf
-          mountPath: /etc/config # as described in source code
+          mountPath: /etc/config/db # as described in source code
+          readOnly: true
+        - name: html-conf
+          mountPath: /etc/config/html
           readOnly: true
       volumes:
       - name: db-conf
         secret:
-          secretName: login-boilerplate-database-config
+          secretName: database-conf
+      - name: html-conf
+        configMap:
+          name: html-conf
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: login-boilerplate-flask
+  name: flask
+  namespace: login-boilerplate
 spec:
   selector:
-    app: login-boilerplate-flask
+    app: flask
   ports:
   - protocol: TCP
     port: 80
@@ -62,10 +73,11 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: login-boilerplate-index
+  name: index
+  namespace: login-boilerplate
 spec:
   selector:
-    app: login-boilerplate-index
+    app: index
   ports:
   - protocol: TCP
     port: 80
@@ -75,10 +87,11 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: login-boilerplate-ingress
+  name: ingress
+  namespace: login-boilerplate
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /
-    cert-manager.io/issuer: "letsencrypt-prod"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
 spec:
   ingressClassName: nginx
   tls:
@@ -93,14 +106,14 @@ spec:
         pathType: Prefix
         backend:
           service:
-            name: login-boilerplate-index
+            name: index
             port:
               number: 80
       - path: /flask
         pathType: Prefix
         backend:
           service:
-            name: login-boilerplate-flask
+            name: flask
             port:
               number: 80
 

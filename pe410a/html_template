@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>brian2002</title>
+  </head>
+  <body>
+    <p>Current time is {{CURRENT_TIME}}</p>
+    
+    <table>
+      <tr><th>id</th><th>username</th><th>password</th><th>raw_password</th></tr>
+      {{& TABLE_CONTENTS}}
+    </table>
+    
+    <form method="post">
+      <table>
+        <tr>
+          <td><label>Username:</label></td>
+          <td><input type="text" name="username" value="{{FORM_USERNAME_VALUE}}" required></td>
+        </tr><tr>
+          <td><label>Password:</label></td>
+          <td><input type="password" name="password" required></td>
+        </tr>
+      </table>
+      <button type="submit">Verify</button>{{REQUEST_RESULT}}
+    </form>
+    
+    <p>{{& STATUS}}</p>
+  </body>
+</html>

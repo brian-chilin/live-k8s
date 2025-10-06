@@ -19,6 +19,22 @@ spec:
         ports:
         - containerPort: 80
 ---
+apiVersion: v1
+kind: Service
+metadata:
+  name: index
+  namespace: login-boilerplate
+spec:
+  selector:
+    app: index
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
+  type: ClusterIP
+---
+
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -70,20 +86,163 @@ spec:
     targetPort: 80
   type: ClusterIP
 ---
+
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fastapi
+  namespace: login-boilerplate
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: fastapi
+  template:
+    metadata:
+      labels:
+        app: fastapi
+    spec:
+      containers:
+      - name: fastapi
+        image: gallery.local:5002/login_boilerplate_fastapi:latest
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: db-conf
+          mountPath: /etc/config/db # as described in source code
+          readOnly: true
+        - name: html-conf
+          mountPath: /etc/config/html
+          readOnly: true
+      volumes:
+      - name: db-conf
+        secret:
+          secretName: database-conf
+      - name: html-conf
+        configMap:
+          name: html-conf
+---
 apiVersion: v1
 kind: Service
 metadata:
-  name: index
+  name: fastapi
   namespace: login-boilerplate
 spec:
   selector:
-    app: index
+    app: fastapi
   ports:
   - protocol: TCP
     port: 80
     targetPort: 80
   type: ClusterIP
 ---
+
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: django
+  namespace: login-boilerplate
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: django
+  template:
+    metadata:
+      labels:
+        app: django
+    spec:
+      containers:
+      - name: django
+        image: gallery.local:5002/login_boilerplate_django:latest
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: db-conf
+          mountPath: /etc/config/db # as described in source code
+          readOnly: true
+        - name: html-conf
+          mountPath: /etc/config/html
+          readOnly: true
+      volumes:
+      - name: db-conf
+        secret:
+          secretName: database-conf
+      - name: html-conf
+        configMap:
+          name: html-conf
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: django
+  namespace: login-boilerplate
+spec:
+  selector:
+    app: django
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
+  type: ClusterIP
+---
+
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: php
+  namespace: login-boilerplate
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: php
+  template:
+    metadata:
+      labels:
+        app: php
+    spec:
+      containers:
+      - name: php
+        #command: ["sleep"]
+        #args: ["6000"]
+        image: gallery.local:5002/login_boilerplate_php:latest
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: db-conf
+          mountPath: /etc/config/db # as described in source code
+          readOnly: true
+        - name: html-conf
+          mountPath: /etc/config/html
+          readOnly: true
+      volumes:
+      - name: db-conf
+        secret:
+          secretName: database-conf
+      - name: html-conf
+        configMap:
+          name: html-conf
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: php
+  namespace: login-boilerplate
+spec:
+  selector:
+    app: php
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
+  type: ClusterIP
+---
+
+
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -114,6 +273,27 @@ spec:
         backend:
           service:
             name: flask
+            port:
+              number: 80
+      - path: /fastapi
+        pathType: Prefix
+        backend:
+          service:
+            name: fastapi
+            port:
+              number: 80
+      - path: /django
+        pathType: Prefix
+        backend:
+          service:
+            name: django
+            port:
+              number: 80
+      - path: /php
+        pathType: Prefix
+        backend:
+          service:
+            name: php
             port:
               number: 80
 

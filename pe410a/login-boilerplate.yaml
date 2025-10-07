@@ -196,7 +196,7 @@ metadata:
   name: php
   namespace: login-boilerplate
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: php
@@ -235,6 +235,59 @@ metadata:
 spec:
   selector:
     app: php
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
+  type: ClusterIP
+---
+
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: actix-web
+  namespace: login-boilerplate
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: actix-web
+  template:
+    metadata:
+      labels:
+        app: actix-web
+    spec:
+      containers:
+      - name: actix-web
+        #command: ["sleep"]
+        #args: ["6000"]
+        image: gallery.local:5002/login_boilerplate_actix-web:latest
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: db-conf
+          mountPath: /etc/config/db # as described in source code
+          readOnly: true
+        - name: html-conf
+          mountPath: /etc/config/html
+          readOnly: true
+      volumes:
+      - name: db-conf
+        secret:
+          secretName: database-conf
+      - name: html-conf
+        configMap:
+          name: html-conf
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: actix-web
+  namespace: login-boilerplate
+spec:
+  selector:
+    app: actix-web
   ports:
   - protocol: TCP
     port: 80
@@ -294,6 +347,13 @@ spec:
         backend:
           service:
             name: php
+            port:
+              number: 80
+      - path: /actix
+        pathType: Prefix
+        backend:
+          service:
+            name: actix-web
             port:
               number: 80
 
